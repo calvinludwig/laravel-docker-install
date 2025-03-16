@@ -1,0 +1,63 @@
+networks:
+  myappnetwork:
+    driver: bridge
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        # UID and GID must be set as environment variables on the host machine
+        # You can set it by running:
+        # $ export UID=$UID && export GID=$GID
+        USER_ID: "${UID}"
+        GROUP_ID: "${GID}"
+    ports:
+      - "8080:8080"
+      - "5173:5173"
+    volumes:
+      - .:/var/www/html:cached
+    networks:
+      - myappnetwork
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres/postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+    volumes:
+      - ./volumes/postgresql/data:/var/lib/postgresql/data
+    networks:
+      - myappnetwork
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    command: ["redis-server"]
+    volumes:
+      - ./volumes/redis/data:/data
+    networks:
+      - myappnetwork
+  mailpit:
+    image: axllent/mailpit:latest
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    volumes:
+      - ./volumes/mailpit/data:/data
+    networks:
+      - myappnetwork
