@@ -23,7 +23,7 @@ services:
       - myappnetwork
     depends_on:
       - db
-      - redis
+      - valkey
 
   db:
     image: postgres/postgres:latest
@@ -38,15 +38,15 @@ services:
     networks:
       - myappnetwork
 
-  redis:
-    image: redis:latest
+  valkey:
+    image: valkey/valkey:latest
     ports:
       - "6379:6379"
-    command: ["redis-server"]
     volumes:
-      - ./volumes/redis/data:/data
+      - ./volumes/valkey/data:/data
     networks:
       - myappnetwork
+
   mailpit:
     image: axllent/mailpit:latest
     environment:
